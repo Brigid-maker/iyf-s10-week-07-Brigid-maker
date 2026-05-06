@@ -28,6 +28,19 @@
     min-height: 100vh;
   }
 
+  .back-link {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 0.9rem;
+    z-index: 1000;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--accent); }
+
   .page-wrap {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -295,6 +308,8 @@
 </style>
 </head>
 <body>
+
+<a href="../homepage.html" class="back-link">← Back to Homepage</a>
 
 <div class="page-wrap">
   <!-- LEFT: The Form -->

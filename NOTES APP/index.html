@@ -54,6 +54,15 @@
     text-transform: uppercase;
   }
 
+  .back-link {
+    color: var(--paper);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--accent); }
+
   .container {
     max-width: 760px;
     margin: 0 auto;
@@ -259,6 +268,7 @@
 <body>
 
 <header>
+  <a href="../homepage.html" class="back-link">← Back to Homepage</a>
   <h1>My Notes</h1>
   <span>localStorage · persisted</span>
 </header>
