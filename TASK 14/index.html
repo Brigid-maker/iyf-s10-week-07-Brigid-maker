@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task 14.1 — Modular To-Do App</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #f7f5f2;
+    --surface:  #ffffff;
+    --ink:      #18181b;
+    --muted:    #71717a;
+    --border:   #e4e4e7;
+    --indigo:   #6366f1;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --amber:    #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .back-link {
+    display: inline-block;
+    margin: 16px 40px 0;
+    color: var(--indigo);
+    text-decoration: none;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar layout ────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ───────────────────────────────────────────────────── */
+  .sidebar {
+    background: var(--ink);
+    color: #a1a1aa;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sidebar-logo {
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar-logo span {
+    background: var(--indigo);
+    color: white;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  .file-tree-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #52525b;
+    margin-bottom: 8px;
+    padding-left: 8px;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #a1a1aa;
+  }
+
+  .file-item:hover  { background: #27272a; color: white; }
+  .file-item.active { background: #3f3f46; color: white; }
+
+  .file-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .file-item .badge {
+    margin-left: auto;
+    font-size: 0.6rem;
+    background: #3f3f46;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .file-indent { padding-left: 28px; }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid #27272a;
+    margin: 16px 0;
+  }
+
+  .concept-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .concept-item {
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    color: #71717a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .concept-item::before { content: '✓'; color: var(--green); font-size: 0.65rem; }
+
+  /* ── Main ──────────────────────────────────────────────────────── */
+  main { display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .topbar h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .topbar p { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+  #stats {
+    display: flex;
+    gap: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  /* ── App area ──────────────────────────────────────────────────── */
+  .app-area { padding: 40px; flex: 1; }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--indigo), var(--green));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ── Input ─────────────────────────────────────────────────────── */
+  .input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    align-items: flex-end;
+  }
+
+  .input-wrap { flex: 1; }
+
+  .input-wrap label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    padding: 12px 16px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrap input:focus { border-color: var(--indigo); }
+
+  .char-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    height: 16px;
+    margin-top: 4px;
+  }
+
+  .btn-add {
+    background: var(--indigo);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    height: 46px;
+  }
+
+  .btn-add:hover { opacity: 0.85; }
+
+  /* ── Filters ───────────────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .filter-btn {
+    background: none;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 5px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active { background: var(--indigo); color: white; }
+
+  .btn-clear-done {
+    background: none;
+    border: none;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 0.78rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .btn-clear-done:hover { color: var(--red); }
+
+  /* ── Todo List ─────────────────────────────────────────────────── */
+  #todoList {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--priority-colour, var(--indigo));
+    padding: 14px 18px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .todo-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .todo-item.done  { opacity: 0.55; }
+
+  .check-btn {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: white;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .todo-item.done .check-btn { background: var(--green); border-color: var(--green); }
+
+  .todo-text {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .todo-item.done .todo-text { text-decoration: line-through; }
+
+  .todo-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .priority-select {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .del-btn:hover { color: var(--red); }
+
+  /* ── Empty State ───────────────────────────────────────────────── */
+  #emptyState {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+  }
+
+  #emptyState p { font-size: 1.1rem; font-weight: 500; margin-bottom: 4px; }
+  #emptyState small {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+  }
+
+  /* ── Toast ─────────────────────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--ink);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 0.82rem;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .app-area { padding: 24px; }
+    .topbar { padding: 16px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../homepage.html" class="back-link">← Back to Homepage</a>
+
+<div class="layout">
+
+  <!-- Sidebar: file tree visualisation -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>📁</span> todo-app
+    </div>
+
+    <p class="file-tree-label">Project Files</p>
+
+    <div class="file-item active">
+      <div class="dot" style="background:#60a5fa"></div>
+      index.html
+      <span class="badge">entry</span>
+    </div>
+
+    <p class="file-tree-label" style="margin-top:12px">js/</p>
+
+    <div class="file-item file-indent">
+      <div class="dot" style="background:#f59e0b"></div>
+      app.js
+      <span class="badge">init</span>
+    </div>
+    <div class="file-item file-indent">
+      <div class="dot" style="background:#a78bfa"></div>
+      state.js
+      <span class="badge">data</span>
+    </div>
+    <div class="file-item file-indent">
+      <div class="dot" style="background:#34d399"></div>
+      storage.js
+      <span class="badge">persist</span>
+    </div>
+    <div class="file-item file-indent">
+      <div class="dot" style="background:#f472b6"></div>
+      ui.js
+      <span class="badge">DOM</span>
+    </div>
+    <div class="file-item file-indent">
+      <div class="dot" style="background:#fb923c"></div>
+      utils.js
+      <span class="badge">pure</span>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <p class="file-tree-label">Concepts Applied</p>
+    <div class="concept-list">
+      <div class="concept-item">ES Modules (import/export)</div>
+      <div class="concept-item">Single Responsibility</div>
+      <div class="concept-item">Observer / Subscribe pattern</div>
+      <div class="concept-item">Cached DOM queries</div>
+      <div class="concept-item">Debounce utility</div>
+      <div class="concept-item">localStorage persistence</div>
+    </div>
+  </aside>
+
+  <!-- Main App -->
+  <main>
+    <div class="topbar">
+      <div>
+        <h1>Task 14.1 — Modular To-Do</h1>
+        <p>Code split across 5 JS modules, wired via ES imports</p>
+      </div>
+      <div id="stats"></div>
+    </div>
+
+    <div class="app-area">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="input-row">
+        <div class="input-wrap">
+          <label for="todoInput">New Task</label>
+          <input type="text" id="todoInput" placeholder="What needs doing?" maxlength="120">
+          <div class="char-hint" id="charCount"></div>
+        </div>
+        <button class="btn-add" id="addBtn">Add</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="filters">
+          <button class="filter-btn" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="active">Active</button>
+          <button class="filter-btn" data-filter="completed">Done</button>
+        </div>
+        <button class="btn-clear-done" id="clearDoneBtn">Clear completed</button>
+      </div>
+
+      <ul id="todoList"></ul>
+
+      <div id="emptyState">
+        <p>Nothing here yet</p>
+        <small>Add a task above to get started</small>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<!-- ES Module: loads app.js which imports all other modules -->
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

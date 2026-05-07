@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task 14.4 — ESLint & Prettier Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #fafaf8;
+    --surface: #ffffff;
+    --card:    #f4f3ef;
+    --border:  #e5e3dd;
+    --ink:     #1a1916;
+    --muted:   #857f75;
+    --eslint:  #4b32c3;
+    --prettier:#1a56db;
+    --green:   #15803d;
+    --red:     #b91c1c;
+    --amber:   #b45309;
+    --code-bg: #1e1e2e;
+    --code-fg: #cdd6f4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .back-link {
+    display: inline-block;
+    margin: 16px 24px 0;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 700;
+    font-family: 'Geist Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 32px 48px;
+  }
+
+  header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.4rem;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  header h1 em { font-style: italic; color: #a78bfa; }
+
+  header p { font-size: 0.75rem; color: #6b7280; letter-spacing: 1px; }
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  .page { max-width: 920px; margin: 0 auto; padding: 56px 24px; }
+
+  /* ── Steps ───────────────────────────────────────────────────── */
+  .steps { display: flex; flex-direction: column; gap: 48px; }
+
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: 24px; }
+
+  .step-num {
+    width: 48px; height: 48px;
+    background: var(--ink);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .step-body {}
+
+  .step-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  /* ── Code blocks ─────────────────────────────────────────────── */
+  .code-wrap {
+    background: var(--code-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .code-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #313244;
+  }
+
+  .code-filename {
+    font-size: 0.68rem;
+    color: #6c7086;
+    letter-spacing: 0.5px;
+  }
+
+  .copy-btn {
+    background: #313244;
+    border: none;
+    color: #cdd6f4;
+    padding: 4px 12px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.62rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.15s;
+  }
+
+  .copy-btn:hover { background: #45475a; }
+  .copy-btn.copied { color: #a6e3a1; }
+
+  pre {
+    padding: 20px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.8;
+    color: var(--code-fg);
+    overflow-x: auto;
+  }
+
+  .cmd  { color: #a6e3a1; }
+  .flag { color: #fab387; }
+  .key  { color: #89b4fa; }
+  .val  { color: #a6e3a1; }
+  .str  { color: #a6e3a1; }
+  .punc { color: #cdd6f4; }
+  .cmt  { color: #6c7086; font-style: italic; }
+  .kw   { color: #cba6f7; }
+
+  /* ── Tool cards ──────────────────────────────────────────────── */
+  .tool-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    padding: 20px;
+    border-radius: 6px;
+  }
+
+  .tool-card h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tool-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tool-card p { font-size: 0.72rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── Rule table ──────────────────────────────────────────────── */
+  .rule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    margin-bottom: 12px;
+  }
+
+  .rule-table th {
+    background: var(--card);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.5px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+  }
+
+  .rule-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .rule-table tr:last-child td { border-bottom: none; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .pill.error  { background: #fee2e2; color: var(--red); }
+  .pill.warn   { background: #fef3c7; color: var(--amber); }
+  .pill.off    { background: #f3f4f6; color: #6b7280; }
+
+  /* ── Interactive config builder ──────────────────────────────── */
+  .config-builder {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 32px;
+  }
+
+  .config-header {
+    background: var(--card);
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .config-header h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+  }
+
+  .config-header p { font-size: 0.68rem; color: var(--muted); }
+
+  .config-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 320px;
+  }
+
+  .config-controls {
+    padding: 24px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .slider::before {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+
+  .toggle input:checked + .slider { background: var(--eslint); }
+  .toggle input:checked + .slider::before { transform: translateX(16px); }
+
+  .toggle-info label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .toggle-info p { font-size: 0.65rem; color: var(--muted); line-height: 1.4; }
+
+  .config-preview {
+    padding: 20px;
+    background: var(--code-bg);
+    overflow-y: auto;
+  }
+
+  .config-preview pre {
+    font-size: 0.7rem;
+    padding: 0;
+    white-space: pre-wrap;
+  }
+
+  /* ── VS Code section ─────────────────────────────────────────── */
+  .ext-grid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .ext-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    padding: 14px 18px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .ext-icon { font-size: 1.5rem; }
+
+  .ext-name { font-weight: 600; display: block; }
+  .ext-desc { font-size: 0.65rem; color: var(--muted); }
+
+  @media (max-width: 680px) {
+    .tool-row, .config-body { grid-template-columns: 1fr; }
+    .config-controls { border-right: none; border-bottom: 1px solid var(--border); }
+    header { padding: 24px; }
+    header h1 { font-size: 1.8rem; }
+    .step { grid-template-columns: 1fr; }
+    .step-num { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../homepage.html" class="back-link">← Back to Homepage</a>
+
+<header>
+  <h1>ESLint <em>&</em> Prettier</h1>
+  <p>Task 14.4 — Linting · Formatting · Code Quality Setup</p>
+</header>
+
+<div class="page">
+
+  <!-- What they do -->
+  <div class="tool-row" style="margin-bottom:48px">
+    <div class="tool-card">
+      <h3><span class="tool-dot" style="background:var(--eslint)"></span> ESLint</h3>
+      <p>A <strong>linter</strong> — it analyses your code for logical errors, bad practices, and rule violations. It reads your code and flags problems like using <code>var</code>, unused variables, or missing curly braces. It does not touch formatting.</p>
+    </div>
+    <div class="tool-card">
+      <h3><span class="tool-dot" style="background:var(--prettier)"></span> Prettier</h3>
+      <p>A <strong>formatter</strong> — it automatically rewrites your code's layout: indentation, quotes, semicolons, line length. It does not check for logic or bad practices. It only cares about how your code <em>looks</em>.</p>
+    </div>
+  </div>
+
+  <div class="steps">
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h2 class="step-title">Initialise npm Project</h2>
+        <p class="step-desc">Creates a <code>package.json</code> file — the project's configuration file. The <code>-y</code> flag accepts all defaults automatically.</p>
+        <div class="code-wrap">
+          <div class="code-top">
+            <span class="code-filename">terminal</span>
+            <button class="copy-btn" onclick="copyCode(this, 'npm init -y')">Copy</button>
+          </div>
+          <pre><span class="cmd">npm init -y</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h2 class="step-title">Install ESLint</h2>
+        <p class="step-desc">Installs ESLint as a dev dependency (not needed in production). Then run <code>--init</code> to answer setup questions and auto-generate your config file.</p>
+        <div class="code-wrap">
+          <div class="code-top">
+            <span class="code-filename">terminal</span>
+            <button class="copy-btn" onclick="copyCode(this, 'npm install eslint --save-dev\nnpx eslint --init')">Copy</button>
+          </div>
+          <pre><span class="cmd">npm install eslint <span class="flag">--save-dev</span>
+npx eslint <span class="flag">--init</span></span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h2 class="step-title">Configure ESLint</h2>
+        <p class="step-desc">Create <code>.eslintrc.json</code> in your project root. Each rule can be set to <code>"error"</code> (blocks), <code>"warn"</code> (flags), or <code>"off"</code>.</p>
+        <div class="code-wrap">
+          <div class="code-top">
+            <span class="code-filename">.eslintrc.json</span>
+            <button class="copy-btn" onclick="copyCode(this, eslintConfig)">Copy</button>
+          </div>
+          <pre id="eslintConfigDisplay"><span class="punc">{</span>
+  <span class="key">"env"</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="key">"browser"</span><span class="punc">:</span> <span class="val">true</span><span class="punc">,</span>     <span class="cmt">// enables window, document, etc.</span>
+    <span class="key">"es2021"</span><span class="punc">:</span>  <span class="val">true</span>      <span class="cmt">// enables modern JS syntax</span>
+  <span class="punc">},</span>
+  <span class="key">"extends"</span><span class="punc">:</span> <span class="str">"eslint:recommended"</span><span class="punc">,</span>  <span class="cmt">// sensible rule defaults</span>
+  <span class="key">"parserOptions"</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="key">"ecmaVersion"</span><span class="punc">:</span> <span class="str">"latest"</span><span class="punc">,</span>
+    <span class="key">"sourceType"</span><span class="punc">:</span>  <span class="str">"module"</span>   <span class="cmt">// enables import/export</span>
+  <span class="punc">},</span>
+  <span class="key">"rules"</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="key">"no-unused-vars"</span><span class="punc">:</span> <span class="str">"warn"</span><span class="punc">,</span>   <span class="cmt">// yellow warning for unused vars</span>
+    <span class="key">"no-console"</span><span class="punc">:</span>     <span class="str">"off"</span><span class="punc">,</span>    <span class="cmt">// allow console.log freely</span>
+    <span class="key">"eqeqeq"</span><span class="punc">:</span>         <span class="str">"error"</span><span class="punc">,</span>  <span class="cmt">// force === instead of ==</span>
+    <span class="key">"curly"</span><span class="punc">:</span>          <span class="str">"error"</span><span class="punc">,</span>  <span class="cmt">// always use { } in if/for</span>
+    <span class="key">"prefer-const"</span><span class="punc">:</span>   <span class="str">"warn"</span>    <span class="cmt">// prefer const over let when possible</span>
+  <span class="punc">}</span>
+<span class="punc">}</span></pre>
+        </div>
+
+        <!-- Rules explained -->
+        <table class="rule-table">
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Level</th>
+              <th>What it catches</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>no-unused-vars</code></td>
+              <td><span class="pill warn">warn</span></td>
+              <td>Variables you declared but never used — usually a mistake</td>
+            </tr>
+            <tr>
+              <td><code>no-console</code></td>
+              <td><span class="pill off">off</span></td>
+              <td>Disabled — so you can use console.log freely while learning</td>
+            </tr>
+            <tr>
+              <td><code>eqeqeq</code></td>
+              <td><span class="pill error">error</span></td>
+              <td>Forces <code>===</code>. Using <code>==</code> causes subtle type-coercion bugs</td>
+            </tr>
+            <tr>
+              <td><code>curly</code></td>
+              <td><span class="pill error">error</span></td>
+              <td>Requires curly braces on all if/for blocks — prevents off-by-indent bugs</td>
+            </tr>
+            <tr>
+              <td><code>prefer-const</code></td>
+              <td><span class="pill warn">warn</span></td>
+              <td>Suggests <code>const</code> when a variable is never reassigned</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h2 class="step-title">Install & Configure Prettier</h2>
+        <p class="step-desc">Prettier handles all formatting automatically — indentation, quotes, semicolons, trailing commas. Configure it with <code>.prettierrc</code>.</p>
+        <div class="code-wrap">
+          <div class="code-top">
+            <span class="code-filename">terminal</span>
+            <button class="copy-btn" onclick="copyCode(this, 'npm install prettier --save-dev')">Copy</button>
+          </div>
+          <pre><span class="cmd">npm install prettier <span class="flag">--save-dev</span></span></pre>
+        </div>
+        <div class="code-wrap">
+          <div class="code-top">
+            <span class="code-filename">.prettierrc</span>
+            <button class="copy-btn" onclick="copyCode(this, prettierConfig)">Copy</button>
+          </div>
+          <pre><span class="punc">{</span>
+  <span class="key">"semi"</span><span class="punc">:</span>          <span class="val">true</span><span class="punc">,</span>    <span class="cmt">// add semicolons at end of lines</span>
+  <span class="key">"singleQuote"</span><span class="punc">:</span>  <span class="val">true</span><span class="punc">,</span>    <span class="cmt">// use 'single' instead of "double" quotes</span>
+  <span class="key">"tabWidth"</span><span class="punc">:</span>      <span class="val">4</span><span class="punc">,</span>       <span class="cmt">// indent with 4 spaces</span>
+  <span class="key">"trailingComma"</span><span class="punc">:</span><span class="str">"es5"</span><span class="punc">,</span>   <span class="cmt">// trailing commas where ES5 allows</span>
+  <span class="key">"printWidth"</span><span class="punc">:</span>   <span class="val">80</span>       <span class="cmt">// wrap lines at 80 characters</span>
+<span class="punc">}</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h2 class="step-title">Add Scripts to package.json</h2>
+        <p class="step-desc">These scripts let you run linting and formatting with short commands from the terminal instead of typing long paths each time.</p>
+        <div class="code-wrap">
+          <div class="code-top">
+            <span class="code-filename">package.json — scripts section</span>
+            <button class="copy-btn" onclick="copyCode(this, scriptsConfig)">Copy</button>
+          </div>
+          <pre><span class="punc">{</span>
+  <span class="key">"scripts"</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="key">"lint"</span><span class="punc">:</span>       <span class="str">"eslint src/"</span><span class="punc">,</span>           <span class="cmt">// check for errors</span>
+    <span class="key">"lint:fix"</span><span class="punc">:</span>   <span class="str">"eslint src/ --fix"</span><span class="punc">,</span>     <span class="cmt">// auto-fix what it can</span>
+    <span class="key">"format"</span><span class="punc">:</span>     <span class="str">"prettier --write src/"</span>    <span class="cmt">// reformat all files</span>
+  <span class="punc">}</span>
+<span class="punc">}</span></pre>
+        </div>
+        <div class="code-wrap" style="margin-top:12px">
+          <div class="code-top">
+            <span class="code-filename">terminal — how to use them</span>
+          </div>
+          <pre><span class="cmd">npm run lint</span>       <span class="cmt"># shows all ESLint errors/warnings</span>
+<span class="cmd">npm run lint:fix</span>   <span class="cmt"># auto-fixes safe issues (like prefer-const)</span>
+<span class="cmd">npm run format</span>     <span class="cmt"># rewrites formatting in all src/ files</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h2 class="step-title">Install VS Code Extensions</h2>
+        <p class="step-desc">These extensions run ESLint and Prettier live in your editor as you type, without needing to run terminal commands manually.</p>
+        <div class="ext-grid">
+          <div class="ext-card">
+            <span class="ext-icon">🔍</span>
+            <div>
+              <span class="ext-name">ESLint</span>
+              <span class="ext-desc">Underlines problems in red/yellow as you type. Shows rule name on hover.</span>
+            </div>
+          </div>
+          <div class="ext-card">
+            <span class="ext-icon">✨</span>
+            <div>
+              <span class="ext-name">Prettier</span>
+              <span class="ext-desc">Auto-formats your file every time you hit Save (Ctrl+S).</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap" style="margin-top:14px">
+          <div class="code-top">
+            <span class="code-filename">VS Code settings.json — enable Format on Save</span>
+            <button class="copy-btn" onclick="copyCode(this, vsCodeSettings)">Copy</button>
+          </div>
+          <pre><span class="punc">{</span>
+  <span class="key">"editor.formatOnSave"</span><span class="punc">:</span> <span class="val">true</span><span class="punc">,</span>
+  <span class="key">"editor.defaultFormatter"</span><span class="punc">:</span> <span class="str">"esbenp.prettier-vscode"</span>
+<span class="punc">}</span></pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive config builder -->
+  <div class="config-builder" style="margin-top:56px">
+    <div class="config-header">
+      <div>
+        <h3>Interactive Config Builder</h3>
+        <p>Toggle rules to see your <code>.eslintrc.json</code> update live</p>
+      </div>
+    </div>
+    <div class="config-body">
+      <div class="config-controls">
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="t-unused" checked onchange="buildConfig()">
+            <span class="slider"></span>
+          </label>
+          <div class="toggle-info">
+            <label for="t-unused">no-unused-vars</label>
+            <p>Warn when a declared variable is never used</p>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="t-eqeq" checked onchange="buildConfig()">
+            <span class="slider"></span>
+          </label>
+          <div class="toggle-info">
+            <label for="t-eqeq">eqeqeq</label>
+            <p>Error on == — force strict equality ===</p>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="t-curly" checked onchange="buildConfig()">
+            <span class="slider"></span>
+          </label>
+          <div class="toggle-info">
+            <label for="t-curly">curly</label>
+            <p>Error if if/for blocks are missing curly braces</p>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="t-const" checked onchange="buildConfig()">
+            <span class="slider"></span>
+          </label>
+          <div class="toggle-info">
+            <label for="t-const">prefer-const</label>
+            <p>Warn when let could be replaced with const</p>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="t-console" onchange="buildConfig()">
+            <span class="slider"></span>
+          </label>
+          <div class="toggle-info">
+            <label for="t-console">no-console</label>
+            <p>Warn on console.log (useful before production)</p>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="t-semi" onchange="buildConfig()">
+            <span class="slider"></span>
+          </label>
+          <div class="toggle-info">
+            <label for="t-semi">no-extra-semi</label>
+            <p>Error on unnecessary semicolons</p>
+          </div>
+        </div>
+
+      </div>
+      <div class="config-preview">
+        <pre id="configOutput"></pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Config strings for copy buttons ──────────────────────────────
+  const eslintConfig = `{
+  "env": { "browser": true, "es2021": true },
+  "extends": "eslint:recommended",
+  "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "eqeqeq": "error",
+    "curly": "error",
+    "prefer-const": "warn"
+  }
+}`;
+
+  const prettierConfig = `{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 4,
+  "trailingComma": "es5",
+  "printWidth": 80
+}`;
+
+  const scriptsConfig = `{
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/"
+  }
+}`;
+
+  const vsCodeSettings = `{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
+}`;
+
+  function copyCode(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  }
+
+  // ── Interactive config builder ────────────────────────────────────
+  function buildConfig() {
+    const rules = {};
+
+    if (document.getElementById('t-unused').checked)  rules['no-unused-vars'] = 'warn';
+    if (document.getElementById('t-eqeq').checked)    rules['eqeqeq']         = 'error';
+    if (document.getElementById('t-curly').checked)   rules['curly']          = 'error';
+    if (document.getElementById('t-const').checked)   rules['prefer-const']   = 'warn';
+    if (document.getElementById('t-console').checked) rules['no-console']     = 'warn';
+    if (document.getElementById('t-semi').checked)    rules['no-extra-semi']  = 'error';
+
+    const config = {
+      env:           { browser: true, es2021: true },
+      extends:       'eslint:recommended',
+      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+      rules,
+    };
+
+    const json = JSON.stringify(config, null, 2);
+
+    // Syntax-highlight the output
+    const highlighted = json
+      .replace(/("[\w-]+")\s*:/g, '<span style="color:#89b4fa">$1</span>:')
+      .replace(/:\s*(".*?")/g,    ': <span style="color:#a6e3a1">$1</span>')
+      .replace(/:\s*(true|false)/g,':<span style="color:#fab387"> $1</span>')
+      .replace(/:\s*(\d+)/g,      ': <span style="color:#fab387">$1</span>');
+
+    document.getElementById('configOutput').innerHTML = highlighted;
+  }
+
+  // Init
+  buildConfig();
+</script>
+</body>
+</html>

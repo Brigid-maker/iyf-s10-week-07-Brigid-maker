@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task 14.2 — Clean Code Practices</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --card: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --bad: #ff7b72;
+    --good: #7ee787;
+    --yellow: #e3b341;
+    --blue: #79c0ff;
+    --purple: #d2a8ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .back-link {
+    display: inline-block;
+    margin: 16px 24px 0;
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 48px;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 48px 24px; }
+
+  /* ── Section ───────────────────────────────────────────────────── */
+  .section {
+    margin-bottom: 56px;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .section-num {
+    background: var(--blue);
+    color: var(--bg);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .section-title h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .section-title p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── Before/After ──────────────────────────────────────────────── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .code-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+  }
+
+  .code-header.bad  { background: rgba(255,123,114,0.08); }
+  .code-header.good { background: rgba(126,231,135,0.08); }
+
+  .tag {
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .tag.bad  { background: rgba(255,123,114,0.15); color: var(--bad); }
+  .tag.good { background: rgba(126,231,135,0.15); color: var(--good); }
+
+  pre {
+    padding: 20px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .kw   { color: var(--purple); }
+  .fn   { color: var(--blue); }
+  .str  { color: var(--yellow); }
+  .num  { color: var(--bad); }
+  .cmt  { color: var(--muted); font-style: italic; }
+  .var  { color: var(--good); }
+  .op   { color: var(--text); }
+
+  /* ── Principle cards ───────────────────────────────────────────── */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .principle-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .principle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .principle-card:nth-child(1)::before { background: var(--blue); }
+  .principle-card:nth-child(2)::before { background: var(--good); }
+  .principle-card:nth-child(3)::before { background: var(--yellow); }
+
+  .principle-icon { font-size: 1.8rem; margin-bottom: 12px; }
+
+  .principle-card h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .principle-card p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── Live Demo ─────────────────────────────────────────────────── */
+  .demo-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    margin-top: 24px;
+  }
+
+  .demo-box h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .demo-inputs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .demo-inputs input, .demo-inputs select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .demo-inputs input:focus { border-color: var(--blue); }
+
+  .demo-btn {
+    background: var(--blue);
+    color: var(--bg);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .demo-btn:hover { opacity: 0.85; }
+
+  .demo-output {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 6px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    min-height: 48px;
+    color: var(--good);
+  }
+
+  /* ── Checklist ─────────────────────────────────────────────────── */
+  .checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+  }
+
+  .check-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+
+  @media (max-width: 700px) {
+    .compare, .principles, .checklist { grid-template-columns: 1fr; }
+    header { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<a href="../homepage.html" class="back-link">← Back to Homepage</a>
+
+<header>
+  <h1>Task 14.2 — Clean Code Practices</h1>
+  <p>Three exercises: Meaningful Names · Single Responsibility · No Magic Numbers</p>
+</header>
+
+<div class="container">
+
+  <!-- Principles overview -->
+  <div class="principles">
+    <div class="principle-card">
+      <div class="principle-icon">🏷️</div>
+      <h3>Meaningful Names</h3>
+      <p>Names should reveal intent. A reader should know what a variable does without reading the surrounding code.</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🎯</div>
+      <h3>Single Responsibility</h3>
+      <p>Every function should do exactly one thing. If you can describe it with "and", split it up.</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🔢</div>
+      <h3>No Magic Numbers</h3>
+      <p>Replace raw numbers and strings with named constants. The name explains <em>why</em> that value exists.</p>
+    </div>
+  </div>
+
+  <!-- Exercise 1: Meaningful Names -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">1</div>
+      <div>
+        <h2>Meaningful Names</h2>
+        <p>Rename variables and functions so the code explains itself</p>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="code-block">
+        <div class="code-header bad">
+          <span>Before</span>
+          <span class="tag bad">Bad</span>
+        </div>
+        <pre><span class="cmt">// What does any of this mean?</span>
+<span class="kw">const</span> <span class="var">d</span> = <span class="kw">new</span> <span class="fn">Date</span>();
+
+<span class="kw">const</span> <span class="var">x</span> = users.<span class="fn">filter</span>(
+  <span class="var">u</span> => <span class="var">u</span>.<span class="var">a</span> > <span class="num">18</span>
+);
+
+<span class="kw">function</span> <span class="fn">calc</span>(<span class="var">a</span>, <span class="var">b</span>) {
+  <span class="kw">return</span> <span class="var">a</span> * <span class="var">b</span> * <span class="num">0.1</span>;
+}
+
+<span class="kw">let</span> <span class="var">f</span> = <span class="kw">false</span>;
+<span class="kw">function</span> <span class="fn">chk</span>(<span class="var">p</span>) {
+  <span class="kw">if</span> (<span class="var">p</span>.<span class="var">l</span> > <span class="num">8</span>) <span class="var">f</span> = <span class="kw">true</span>;
+  <span class="kw">return</span> <span class="var">f</span>;
+}</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header good">
+          <span>After</span>
+          <span class="tag good">Good</span>
+        </div>
+        <pre><span class="cmt">// Intent is crystal clear</span>
+<span class="kw">const</span> <span class="var">currentDate</span> = <span class="kw">new</span> <span class="fn">Date</span>();
+
+<span class="kw">const</span> <span class="var">adultUsers</span> = users.<span class="fn">filter</span>(
+  <span class="var">user</span> => <span class="var">user</span>.<span class="var">age</span> > <span class="num">18</span>
+);
+
+<span class="kw">function</span> <span class="fn">calculateDiscount</span>(
+  <span class="var">price</span>, <span class="var">quantity</span>
+) {
+  <span class="kw">const</span> <span class="var">DISCOUNT_RATE</span> = <span class="num">0.1</span>;
+  <span class="kw">return</span> <span class="var">price</span> * <span class="var">quantity</span> * <span class="var">DISCOUNT_RATE</span>;
+}
+
+<span class="kw">let</span> <span class="var">isPasswordValid</span> = <span class="kw">false</span>;
+<span class="kw">function</span> <span class="fn">validatePassword</span>(<span class="var">password</span>) {
+  <span class="var">isPasswordValid</span> = <span class="var">password</span>.<span class="var">length</span> > <span class="num">8</span>;
+  <span class="kw">return</span> <span class="var">isPasswordValid</span>;
+}</pre>
+      </div>
+    </div>
+
+    <!-- Live demo: discount calculator -->
+    <div class="demo-box">
+      <h3>▶ Live Demo — Discount Calculator</h3>
+      <div class="demo-inputs">
+        <input type="number" id="priceInput" placeholder="Price (e.g. 50)" min="0">
+        <input type="number" id="qtyInput" placeholder="Quantity (e.g. 3)" min="1">
+        <button class="demo-btn" onclick="runDiscountDemo()">Calculate</button>
+      </div>
+      <div class="demo-output" id="discountOutput">Enter price and quantity above…</div>
+    </div>
+  </div>
+
+  <!-- Exercise 2: Single Responsibility -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Single Responsibility</h2>
+        <p>Split a function that does 5 things into 5 focused functions</p>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="code-block">
+        <div class="code-header bad">
+          <span>Before — processUser() does everything</span>
+          <span class="tag bad">Bad</span>
+        </div>
+        <pre><span class="kw">function</span> <span class="fn">processUser</span>(<span class="var">userData</span>) {
+  <span class="cmt">// 1. Validate</span>
+  <span class="kw">if</span> (!<span class="var">userData</span>.<span class="var">email</span>.<span class="fn">includes</span>(<span class="str">"@"</span>))
+    <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">"Invalid email"</span>);
+  <span class="kw">if</span> (<span class="var">userData</span>.<span class="var">age</span> < <span class="num">18</span>)
+    <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">"Must be adult"</span>);
+
+  <span class="cmt">// 2. Transform</span>
+  <span class="var">userData</span>.<span class="var">email</span> =
+    <span class="var">userData</span>.<span class="var">email</span>.<span class="fn">toLowerCase</span>();
+  <span class="var">userData</span>.<span class="var">name</span> =
+    <span class="var">userData</span>.<span class="var">name</span>.<span class="fn">trim</span>();
+
+  <span class="cmt">// 3. Save  4. Email  5. Update UI</span>
+  database.<span class="fn">save</span>(<span class="var">userData</span>);
+  emailService.<span class="fn">send</span>(<span class="var">userData</span>.<span class="var">email</span>);
+  document.<span class="fn">getElementById</span>(<span class="str">"status"</span>)
+    .<span class="var">textContent</span> = <span class="str">"User created!"</span>;
+}</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header good">
+          <span>After — one job per function</span>
+          <span class="tag good">Good</span>
+        </div>
+        <pre><span class="kw">function</span> <span class="fn">validateUser</span>(<span class="var">userData</span>) {
+  <span class="kw">if</span> (!<span class="var">userData</span>.<span class="var">email</span>.<span class="fn">includes</span>(<span class="str">"@"</span>))
+    <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">"Invalid email"</span>);
+  <span class="kw">if</span> (<span class="var">userData</span>.<span class="var">age</span> < <span class="num">18</span>)
+    <span class="kw">throw</span> <span class="kw">new</span> <span class="fn">Error</span>(<span class="str">"Must be adult"</span>);
+}
+
+<span class="kw">function</span> <span class="fn">normaliseUser</span>(<span class="var">userData</span>) {
+  <span class="kw">return</span> { ...<span class="var">userData</span>,
+    <span class="var">email</span>: <span class="var">userData</span>.<span class="var">email</span>.<span class="fn">toLowerCase</span>(),
+    <span class="var">name</span>:  <span class="var">userData</span>.<span class="var">name</span>.<span class="fn">trim</span>(),
+  };
+}
+
+<span class="kw">async function</span> <span class="fn">createUser</span>(<span class="var">userData</span>) {
+  <span class="fn">validateUser</span>(<span class="var">userData</span>);
+  <span class="kw">const</span> <span class="var">clean</span> = <span class="fn">normaliseUser</span>(<span class="var">userData</span>);
+  <span class="kw">await</span> database.<span class="fn">save</span>(<span class="var">clean</span>);
+  <span class="kw">await</span> emailService.<span class="fn">sendWelcome</span>(
+    <span class="var">clean</span>.<span class="var">email</span>
+  );
+  <span class="kw">return</span> <span class="var">clean</span>;
+}</pre>
+      </div>
+    </div>
+
+    <!-- Live demo -->
+    <div class="demo-box">
+      <h3>▶ Live Demo — User Validator</h3>
+      <div class="demo-inputs">
+        <input type="text" id="nameInput" placeholder="Name (e.g.  Jane )">
+        <input type="text" id="emailInput" placeholder="Email">
+        <input type="number" id="ageInput" placeholder="Age" min="0">
+        <button class="demo-btn" onclick="runUserDemo()">Process</button>
+      </div>
+      <div class="demo-output" id="userOutput">Fill in the fields above…</div>
+    </div>
+  </div>
+
+  <!-- Exercise 3: No Magic Numbers -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num">3</div>
+      <div>
+        <h2>No Magic Numbers</h2>
+        <p>Replace bare literals with named constants that explain their purpose</p>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="code-block">
+        <div class="code-header bad">
+          <span>Before — numbers with no context</span>
+          <span class="tag bad">Bad</span>
+        </div>
+        <pre><span class="kw">if</span> (<span class="var">password</span>.<span class="var">length</span> < <span class="num">8</span>) { }
+
+<span class="fn">setTimeout</span>(<span class="var">callback</span>, <span class="num">86400000</span>);
+
+<span class="kw">if</span> (<span class="var">response</span>.<span class="var">status</span> === <span class="num">404</span>) { }
+
+<span class="kw">if</span> (<span class="var">score</span> >= <span class="num">90</span>) <span class="kw">return</span> <span class="str">"A"</span>;
+<span class="kw">if</span> (<span class="var">score</span> >= <span class="num">75</span>) <span class="kw">return</span> <span class="str">"B"</span>;
+<span class="kw">if</span> (<span class="var">score</span> >= <span class="num">60</span>) <span class="kw">return</span> <span class="str">"C"</span>;
+
+<span class="kw">const</span> <span class="var">tax</span> = <span class="var">price</span> * <span class="num">0.16</span>;
+<span class="kw">const</span> <span class="var">discounted</span> = <span class="var">price</span> * <span class="num">0.85</span>;</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header good">
+          <span>After — named constants explain the why</span>
+          <span class="tag good">Good</span>
+        </div>
+        <pre><span class="kw">const</span> <span class="var">MIN_PASSWORD_LENGTH</span> = <span class="num">8</span>;
+<span class="kw">if</span> (<span class="var">password</span>.<span class="var">length</span> < <span class="var">MIN_PASSWORD_LENGTH</span>) {}
+
+<span class="kw">const</span> <span class="var">ONE_DAY_MS</span> = <span class="num">24</span> * <span class="num">60</span> * <span class="num">60</span> * <span class="num">1000</span>;
+<span class="fn">setTimeout</span>(<span class="var">callback</span>, <span class="var">ONE_DAY_MS</span>);
+
+<span class="kw">const</span> <span class="var">HTTP_NOT_FOUND</span> = <span class="num">404</span>;
+<span class="kw">if</span> (<span class="var">response</span>.<span class="var">status</span> === <span class="var">HTTP_NOT_FOUND</span>) {}
+
+<span class="kw">const</span> <span class="var">GRADE_A_MIN</span> = <span class="num">90</span>, <span class="var">GRADE_B_MIN</span> = <span class="num">75</span>,
+      <span class="var">GRADE_C_MIN</span> = <span class="num">60</span>;
+<span class="kw">if</span> (<span class="var">score</span> >= <span class="var">GRADE_A_MIN</span>) <span class="kw">return</span> <span class="str">"A"</span>;
+
+<span class="kw">const</span> <span class="var">VAT_RATE</span>      = <span class="num">0.16</span>;
+<span class="kw">const</span> <span class="var">DISCOUNT_RATE</span> = <span class="num">0.15</span>;
+<span class="kw">const</span> <span class="var">tax</span>        = <span class="var">price</span> * <span class="var">VAT_RATE</span>;
+<span class="kw">const</span> <span class="var">discounted</span> = <span class="var">price</span> * (<span class="num">1</span> - <span class="var">DISCOUNT_RATE</span>);</pre>
+      </div>
+    </div>
+
+    <!-- Live demo: grade calculator -->
+    <div class="demo-box">
+      <h3>▶ Live Demo — Grade Calculator (using named constants)</h3>
+      <div class="demo-inputs">
+        <input type="number" id="scoreInput" placeholder="Score (0–100)" min="0" max="100">
+        <input type="number" id="priceDemo" placeholder="Price ($)" min="0">
+        <button class="demo-btn" onclick="runGradeDemo()">Calculate</button>
+      </div>
+      <div class="demo-output" id="gradeOutput">Enter a score and price above…</div>
+    </div>
+  </div>
+
+  <!-- Clean Code Checklist -->
+  <div class="section">
+    <div class="section-title">
+      <div class="section-num" style="background:var(--good)">✓</div>
+      <div>
+        <h2>Quick Reference Checklist</h2>
+        <p>Run through this before every code review</p>
+      </div>
+    </div>
+    <div class="checklist">
+      <div class="check-item"><span class="check-icon">🏷️</span> Variable names reveal intent without comments</div>
+      <div class="check-item"><span class="check-icon">🎯</span> Each function does exactly one thing</div>
+      <div class="check-item"><span class="check-icon">🔢</span> No bare numbers or strings — use constants</div>
+      <div class="check-item"><span class="check-icon">📏</span> Functions are under ~20 lines</div>
+      <div class="check-item"><span class="check-icon">🚫</span> No variables named <code>d</code>, <code>x</code>, <code>tmp</code>, <code>data</code></div>
+      <div class="check-item"><span class="check-icon">🔁</span> No duplicate code — extract shared logic</div>
+      <div class="check-item"><span class="check-icon">⚠️</span> No more than 3 levels of nesting</div>
+      <div class="check-item"><span class="check-icon">✅</span> <code>const</code> by default, <code>let</code> only when needed</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Named Constants (Exercise 3 in practice) ──────────────────────
+  const DISCOUNT_RATE     = 0.10;
+  const GRADE_A_MIN       = 90;
+  const GRADE_B_MIN       = 75;
+  const GRADE_C_MIN       = 60;
+  const GRADE_D_MIN       = 50;
+  const MIN_PASSWORD_LEN  = 8;
+  const VAT_RATE          = 0.16;
+  const SALE_DISCOUNT     = 0.15;
+
+  // ── Exercise 1 Demo: Discount Calculator ──────────────────────────
+  function calculateDiscount(price, quantity) {
+    return price * quantity * DISCOUNT_RATE;
+  }
+
+  function runDiscountDemo() {
+    const price    = parseFloat(document.getElementById('priceInput').value);
+    const quantity = parseFloat(document.getElementById('qtyInput').value);
+    const output   = document.getElementById('discountOutput');
+
+    if (isNaN(price) || isNaN(quantity) || price < 0 || quantity < 1) {
+      output.style.color = 'var(--bad)';
+      output.textContent = '⚠ Enter valid price and quantity';
+      return;
+    }
+
+    const subtotal = price * quantity;
+    const discount = calculateDiscount(price, quantity);
+    const total    = subtotal - discount;
+
+    output.style.color = 'var(--good)';
+    output.textContent =
+      `Subtotal: $${subtotal.toFixed(2)}  ·  ` +
+      `Discount (${DISCOUNT_RATE * 100}%): -$${discount.toFixed(2)}  ·  ` +
+      `Total: $${total.toFixed(2)}`;
+  }
+
+  // ── Exercise 2 Demo: Single Responsibility ────────────────────────
+  function validateUser(userData) {
+    if (!userData.email.includes('@')) throw new Error('Email must contain @');
+    if (userData.age < 18)             throw new Error('User must be 18 or older');
+  }
+
+  function normaliseUser(userData) {
+    return {
+      ...userData,
+      email: userData.email.toLowerCase().trim(),
+      name:  userData.name.trim(),
+    };
+  }
+
+  function runUserDemo() {
+    const output = document.getElementById('userOutput');
+    const raw = {
+      name:  document.getElementById('nameInput').value,
+      email: document.getElementById('emailInput').value,
+      age:   parseInt(document.getElementById('ageInput').value),
+    };
+
+    try {
+      validateUser(raw);
+      const clean = normaliseUser(raw);
+      output.style.color = 'var(--good)';
+      output.textContent =
+        `✓ Valid user — normalised: name="${clean.name}", email="${clean.email}"`;
+    } catch (err) {
+      output.style.color = 'var(--bad)';
+      output.textContent = `✗ ${err.message}`;
+    }
+  }
+
+  // ── Exercise 3 Demo: Grade + Price Calculator ─────────────────────
+  function getGrade(score) {
+    if (score >= GRADE_A_MIN) return 'A — Excellent';
+    if (score >= GRADE_B_MIN) return 'B — Good';
+    if (score >= GRADE_C_MIN) return 'C — Average';
+    if (score >= GRADE_D_MIN) return 'D — Below Average';
+    return 'F — Fail';
+  }
+
+  function runGradeDemo() {
+    const score  = parseFloat(document.getElementById('scoreInput').value);
+    const price  = parseFloat(document.getElementById('priceDemo').value);
+    const output = document.getElementById('gradeOutput');
+
+    if (isNaN(score) && isNaN(price)) {
+      output.style.color = 'var(--bad)';
+      output.textContent = '⚠ Enter at least one value';
+      return;
+    }
+
+    output.style.color = 'var(--good)';
+    const parts = [];
+
+    if (!isNaN(score) && score >= 0 && score <= 100) {
+      parts.push(`Grade: ${getGrade(score)} (score: ${score})`);
+    }
+
+    if (!isNaN(price) && price > 0) {
+      const vat      = price * VAT_RATE;
+      const sale     = price * (1 - SALE_DISCOUNT);
+      parts.push(
+        `Price: $${price.toFixed(2)} | +VAT: $${(price + vat).toFixed(2)} | Sale (-${SALE_DISCOUNT*100}%): $${sale.toFixed(2)}`
+      );
+    }
+
+    output.textContent = parts.length ? parts.join('\n') : '⚠ Values out of range';
+  }
+
+  // Allow Enter key in demo inputs
+  document.querySelectorAll('.demo-inputs input').forEach(input => {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const btn = input.closest('.demo-box').querySelector('.demo-btn');
+        btn.click();
+      }
+    });
+  });
+</script>
+</body>
+</html>
